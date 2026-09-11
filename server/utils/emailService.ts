@@ -1,37 +1,73 @@
+// Import Nodemailer to handle SMTP connections and email dispatch
 import nodemailer from "nodemailer";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * Email Service (server/utils/emailService.ts)
+ * ============================================================================
+ * Responsibilities:
+ * 1. Transporter Management: Creates and reuses a singleton Nodemailer transport
+ *    when SMTP credentials are configured in environment variables.
+ * 2. Responsive HTML Template: Generates a branded EcoTrack email containing
+ *    the 6-digit OTP code, expiration warning, and security footer.
+ * 3. Developer Experience & Fallback: In development or when SMTP is not configured,
+ *    prints the OTP in an unmistakable ASCII terminal banner for zero-friction testing.
+ */
+
+// Interface defining the response returned by sendOtpEmail
 interface SendOtpResult {
-  success: boolean;
-  previewUrl?: string;
-  devMode?: boolean;
+  success: boolean;       // True if email was delivered or logged in devMode
+  previewUrl?: string;    // Optional preview URL when using test accounts
+  devMode?: boolean;      // True if handled via local terminal fallback
 }
 
+// Singleton transporter instance variable
 let transporter: any = null;
 
+/**
+ * getTransporter:
+ * Initializes and caches the Nodemailer transporter using environment variables.
+ * Returns null if SMTP variables are not fully configured.
+ */
 function getTransporter() {
+  // If transporter was already initialized, reuse the existing instance
   if (transporter) return transporter;
 
+  // Read SMTP settings from environment
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
+  // If all three essential settings exist, configure the transport
   if (host && user && pass) {
     transporter = nodemailer.createTransport({
-      host,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: { user, pass },
+      host,                                                // e.g. smtp.gmail.com
+      port: Number(process.env.SMTP_PORT) || 587,          // 587 for STARTTLS
+      secure: process.env.SMTP_SECURE === "true",          // false for port 587
+      auth: { user, pass },                               // SMTP authentication credentials
     });
     console.log("📧 Email service configured with SMTP host:", host);
   }
 
+  // Return the configured transporter or null
   return transporter;
 }
 
+/**
+ * sendOtpEmail:
+ * Dispatches a password reset OTP verification code to the recipient's email.
+ * - Always prints the code to the server console for immediate visibility.
+ * - Sends via SMTP if configured, otherwise completes gracefully in devMode.
+ */
 export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOtpResult> {
+  // 1. Retrieve the active Nodemailer transporter
   const mailTransporter = getTransporter();
+
+  // 2. Read sender email address or fallback to default branded sender
   const fromAddress = process.env.SMTP_FROM || '"EcoTrack Security" <no-reply@ecotrack.local>';
 
+  // 3. Assemble responsive HTML email template
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -75,7 +111,7 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
     </html>
   `;
 
-  // Prominent terminal logging so developers / testers always see the OTP immediately
+  // 4. Prominent terminal logging: displays code in server console for local testing
   console.log("\n=======================================================");
   console.log("🔑 [ECOTRACK PASSWORD RESET OTP]");
   console.log(`   Recipient: ${toEmail}`);
@@ -83,8 +119,10 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
   console.log("   Validity:  10 minutes");
   console.log("=======================================================\n");
 
+  // 5. If SMTP transporter is available, attempt real email delivery
   if (mailTransporter) {
     try {
+      // Send mail using Nodemailer
       const info = await mailTransporter.sendMail({
         from: fromAddress,
         to: toEmail,
@@ -96,11 +134,12 @@ export async function sendOtpEmail(toEmail: string, otp: string): Promise<SendOt
       console.log(`✅ Reset OTP email dispatched to ${toEmail} (MessageId: ${info.messageId})`);
       return { success: true };
     } catch (err) {
+      // If SMTP fails, log the error and complete gracefully via console fallback
       console.error("⚠️ Failed to dispatch email via SMTP, falling back to local terminal code:", err);
       return { success: true, devMode: true };
     }
   }
 
-  // Development mode without SMTP credentials
+  // 6. Development mode without SMTP credentials
   return { success: true, devMode: true };
 }
