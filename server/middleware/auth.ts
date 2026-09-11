@@ -1,6 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * JWT Authentication Middleware (server/middleware/auth.ts)
+ * ============================================================================
+ * Purpose:
+ * Validates incoming HTTP requests containing a Bearer JWT in the Authorization
+ * header. When valid, decodes user credentials (id, role, companyId) and attaches
+ * them to `req.user` for downstream controllers and RBAC guards.
+ */
+
 export interface AuthPayload {
   id: string;
   role: "admin" | "employee" | "executive";
@@ -16,6 +27,13 @@ declare global {
   }
 }
 
+/**
+ * requireAuth middleware:
+ * 1. Checks for existence of "Authorization: Bearer <token>" header
+ * 2. Verifies token integrity and expiration using JWT_SECRET
+ * 3. Injects decoded payload into req.user
+ * 4. Rejects requests with 401 Unauthorized if missing, altered, or expired
+ */
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
@@ -33,6 +51,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
       return res.status(500).json({ message: "Server misconfiguration" });
     }
 
+    // Verify token cryptographic signature and expiration
     const decoded = jwt.verify(token, secret) as AuthPayload;
     req.user = decoded;
     next();
@@ -40,3 +59,4 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
+

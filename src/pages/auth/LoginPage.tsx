@@ -5,6 +5,18 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * User Login Page (src/pages/auth/LoginPage.tsx)
+ * ============================================================================
+ * Features:
+ * - Standard authentication (email + password) with real bcrypt verification on backend.
+ * - One-click Google Sign-In with Google Identity Services (GIS) and dev fallback.
+ * - Password visibility toggle.
+ * - Direct links to Register and Forgot Password flows.
+ * - Immediate session re-hydration and redirect to /dashboard upon success.
+ */
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

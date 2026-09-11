@@ -8,21 +8,46 @@ import { Company, VALID_REGIONS } from "../models/Company.js";
 import { validateStrongPassword } from "../utils/passwordValidator.js";
 import { sendOtpEmail } from "../utils/emailService.js";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * Authentication Controller (server/controllers/authController.ts)
+ * ============================================================================
+ * Key Responsibilities:
+ * 1. User Registration: Validates strong password rules, hashes via bcrypt,
+ *    creates Company and Admin User in MongoDB, and signs session JWT.
+ * 2. Standard Login: Verifies email/password with bcrypt against DB hash,
+ *    retrieves user profile and company info, signs 7-day session JWT.
+ * 3. Google Sign-In: Verifies Google ID tokens via google-auth-library, links
+ *    existing accounts or auto-provisions new user and organization.
+ * 4. Forgot Password with OTP: Generates secure 6-digit numeric OTP, saves hashed
+ *    record with MongoDB TTL (10-min expiration), sends email via Nodemailer.
+ * 5. Verify OTP: Rate-limited verification (max 5 attempts), returns 15-minute
+ *    single-purpose JWT password reset token.
+ * 6. Reset Password: Cryptographically verifies reset token, checks strong password
+ *    criteria, hashes and updates password in database.
+ * 7. Session Validation (getMe): Re-hydrates user state from valid JWT.
+ */
+
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET is not set in environment variables");
   return secret;
 };
 
+// Signs a 7-day cryptographic JSON Web Token containing user ID, role, and company ID
 const signToken = (payload: { id: string; role: string; companyId: string }) => {
   return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 };
 
-// Google OAuth client
+// Google OAuth 2.0 Client initialization
 const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 
-// Registers a brand new company along with its first user (always "admin").
+/**
+ * register:
+ * Handles onboarding flow for a brand new company and its primary admin user.
+ */
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, companyName, region } = req.body;

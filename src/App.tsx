@@ -85,6 +85,17 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 }
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * Client-Side Route Protection & RBAC Guard (src/App.tsx)
+ * ============================================================================
+ * Purpose:
+ * 1. Checks if user is authenticated; if not, redirects to /login.
+ * 2. Enforces Role-Based Access Control (RBAC): if allowedRoles is provided
+ *    and the user's role is not in the array, redirects to /dashboard.
+ * 3. Gracefully waits for initial auth re-hydration (isLoading === false).
+ */
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) {
   const { isAuthenticated, role, isLoading } = useAuth();
   if (isLoading) return null;
@@ -115,7 +126,7 @@ export default function App() {
               <ErrorBoundary>
               <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Public Routes with Navbar */}
+                {/* ─── Member 1: Public Authentication Routes ──────────── */}
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/login" element={<LoginPage />} />

@@ -6,6 +6,20 @@ import { useToast } from "../../context/ToastContext";
 import { PasswordStrengthMeter } from "../../components/auth/PasswordStrengthMeter";
 import { evaluatePassword } from "../../utils/passwordValidator";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * Forgot Password & Email OTP Recovery Wizard (src/pages/auth/ForgotPasswordPage.tsx)
+ * ============================================================================
+ * 4-Step Interactive Recovery Workflow:
+ * - Step 1 (Request Code): Submits email to POST /api/auth/forgot-password. Backend
+ *   generates a cryptographically random 6-digit OTP and sends it via email.
+ * - Step 2 (Verify OTP): 6-digit input boxes with auto-advance, backspace navigation,
+ *   paste distribution, and 60-second cooldown resend timer. Validated against MongoDB.
+ * - Step 3 (New Password): Prompts for new password with real-time PasswordStrengthMeter
+ *   and confirm-password matching. Updates hashed password in database.
+ * - Step 4 (Success): Confirms password change and provides direct link to login.
+ */
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { success: toastSuccess, error: toastError } = useToast();

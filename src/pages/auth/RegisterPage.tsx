@@ -9,6 +9,18 @@ import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 import { PasswordStrengthMeter } from "../../components/auth/PasswordStrengthMeter";
 import { evaluatePassword } from "../../utils/passwordValidator";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * User & Organization Registration Page (src/pages/auth/RegisterPage.tsx)
+ * ============================================================================
+ * Features:
+ * - Simultaneous creation of Company and initial Admin User account in MongoDB.
+ * - Real-time password strength evaluation via PasswordStrengthMeter.
+ * - Client-side block preventing registration unless all 5 strong password rules are met.
+ * - One-click Google Sign-Up alternative.
+ * - Automatic session token initialization and routing to /onboarding upon completion.
+ */
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();

@@ -1,6 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import apiClient from "../api/axiosClient";
 
+/**
+ * ============================================================================
+ * MEMBER 1: AUTHENTICATION & SECURITY
+ * React Authentication Context (src/context/AuthContext.tsx)
+ * ============================================================================
+ * Responsibilities:
+ * 1. Global Session State: Maintains isAuthenticated, role (RBAC), user details,
+ *    company metadata, avatar, and JWT token across the entire React frontend.
+ * 2. Real Auth Persistence: Safely stores JWT in localStorage and validates it
+ *    on initial page mount via GET /api/auth/me against the backend database.
+ * 3. Auth Actions: Provides login(), googleLogin(), register(), and logout()
+ *    hooks to auth pages and navigation components.
+ * 4. Synchronization: Injects Bearer token into all subsequent axios requests
+ *    via axiosClient interceptor.
+ */
+
 export type Role = "admin" | "employee" | "executive";
 
 interface AuthState {
@@ -20,6 +36,7 @@ interface AuthContextType extends AuthState {
   register: (data: { name: string; email: string; password: string; companyName: string; region: string }) => Promise<any>;
   logout: () => void;
 }
+
 
 const emptyState: AuthState = {
   isAuthenticated: false,
